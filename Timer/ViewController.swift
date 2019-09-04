@@ -32,23 +32,36 @@ class ViewController: UIViewController {
     
     func start(seconds: Int) {
         currentSeconds = seconds
-        label.text = "残り\(currentSeconds)秒"
+        printLabel()
         timer = Timer.scheduledTimer(
             withTimeInterval: 1.0,
             repeats: true,
             block: update)
- //           userInfo: nil)
-//        Timer.scheduledTimer(withTimeInterval: <#T##TimeInterval#>, repeats: <#T##Bool#>, block: <#T##(Timer) -> Void#>)
     }
     
     func update(timer: Timer)->Void {
         currentSeconds -= 1
-        label.text = "残り\(currentSeconds)秒"
+        printLabel()
         if (currentSeconds == 0) {
             timer.invalidate()
             let soundId : SystemSoundID = 1005
             AudioServicesPlayAlertSound(soundId)
         }
+    }
+    
+    func printLabel() {
+        var seconds: Int = currentSeconds
+        var secondsString: String = "残り"
+        if(seconds > 3600) {
+            secondsString += "\(seconds/3600)時間"
+            seconds %= 3600
+        }
+        if(seconds > 60) {
+            secondsString += "\(seconds/60)分"
+            seconds %= 60
+        }
+        secondsString += "\(seconds)秒"
+        label.text = secondsString
     }
 }
 
