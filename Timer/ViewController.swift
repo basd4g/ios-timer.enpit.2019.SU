@@ -72,23 +72,20 @@ class ViewController: UIViewController {
         if inputedNumber != 0 {
             return
         }
-        if sender.currentTitle! == "start" {
-            isMovingTimer = true
+        if !isMovingTimer {
             start(seconds: timerStartSeconds)
+            sender.backgroundColor = UIColor(red:231/255,green:71/255,blue:59/255,alpha:1)
             sender.setTitle("stop", for: .normal)
         } else {
-            isMovingTimer = false
+            sender.backgroundColor = UIColor(red:70/255,green:201/255,blue:60/255,alpha:1)
             sender.setTitle("start", for: .normal)
             timerStartSeconds = currentSeconds
         }
+        isMovingTimer = !isMovingTimer
         printLabel()
     }
     func start(seconds: Int) {
-        if(seconds>0){
-            currentSeconds =  seconds
-        } else{
-            currentSeconds = 1
-        }
+        currentSeconds =  seconds
         timer = Timer.scheduledTimer(
             withTimeInterval: 1.0,
             repeats: true,
@@ -96,11 +93,14 @@ class ViewController: UIViewController {
     }
     
     func update(timer: Timer)->Void {
-        currentSeconds -= 1
+        if currentSeconds > 0 {
+            currentSeconds -= 1
+        } else {
+            currentSeconds = 0
+        }
         printLabel()
         if (currentSeconds == 0) {
             timer.invalidate()
-//            AudioServicesPlayAlertSound(soundId)
             repertTimerSounds()
         }
     }
@@ -116,21 +116,35 @@ class ViewController: UIViewController {
     
     func printLabel() {
         print("printLabel()")
-        if isMovingTimer {
-            let hour = currentSeconds / 3600
-            let min = (currentSeconds % 3600) / 60
-            let sec = currentSeconds % 60
-            label.text = "残り\(hour)時間\(min)分\(sec)秒"
-        } else {
-            if (inputedNumber == 0) {
-                let hour = timerStartSeconds / 3600
-                let min = (timerStartSeconds % 3600) / 60
-                let sec = timerStartSeconds % 60
-                label.text = "\(hour)時間\(min)分\(sec)秒"
-            } else {
-                label.text = "\(inputedNumber)"
-            }
+        if !isMovingTimer && inputedNumber != 0 {
+            label.text = "\(inputedNumber)"
+            return
         }
+
+        var labelText: String = ""
+        var seconds: Int = 0
+        
+        if isMovingTimer {
+            labelText += "残り"
+            seconds = currentSeconds
+        } else {
+            seconds = timerStartSeconds
+        }
+        
+        labelText += returnStringHHMMSS(
+            hour: seconds / 3600,
+            min: (seconds % 3600) / 60,
+            sec: seconds % 60)
+        
+        label.text = labelText
+    }
+    
+    func returnStringHHMMSS(hour: Int, min: Int, sec: Int) ->String {
+        var returnString = ""
+        returnString += String(format: "%02d", hour) + ":"
+        returnString += String(format: "%02d", min) + ":"
+        returnString += String(format: "%02d", sec)
+        return returnString
     }
 }
 
