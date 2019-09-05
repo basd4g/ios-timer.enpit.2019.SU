@@ -14,25 +14,81 @@ class ViewController: UIViewController {
     
     var timer: Timer?
     var currentSeconds = 0
+    var isMovingTimer = false
+    var inputedNumber: Int = 0
+    var timerStartSeconds: Int = 0
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
-    }
-
-    @IBAction func tenSecButtonTapped(_ sender: Any) {
-        start(seconds: 10)
-    }
-    @IBAction func threeMinButtonTapped(_ sender: Any) {
-        start(seconds: 180)
-    }
-    @IBAction func fiveMinButtonTapped(_ sender: Any) {
-        start(seconds: 300)
+        printLabel()
     }
     
-    func start(seconds: Int) {
-        currentSeconds = seconds
+    @IBAction func numberButtonTapped(_ sender: UIButton) {
+        if isMovingTimer == true {
+            return
+        }
+//        print("numberButtonTapped")
+        let number = Int(sender.currentTitle!)!
+//        print(number)
+        inputedNumber = inputedNumber * 10 + number
+//        print(inputedNumber)
         printLabel()
+    }
+    
+    @IBAction func unitButtonTapped(_ sender: UIButton) {
+        if isMovingTimer == true {
+            return
+        }
+        print("unitButtonTapped")
+        var hour = timerStartSeconds / 3600
+        var min = (timerStartSeconds % 3600 ) / 60
+        var sec = timerStartSeconds % 60
+        switch sender.currentTitle! {
+        case "Hour":
+            hour = inputedNumber
+        case "Min":
+            min = inputedNumber
+        case "Sec":
+            sec = inputedNumber
+        default :
+            timerStartSeconds = 0
+        }
+        timerStartSeconds = (hour * 3600) + (min * 60) + sec
+        inputedNumber = 0
+        printLabel()
+    }
+    
+    @IBAction func resetButtonTapped(_ sender: Any) {
+        if isMovingTimer == true {
+            return
+        }
+        inputedNumber = 0
+        timerStartSeconds = 0
+        printLabel()
+    }
+    
+    @IBAction func startButtonTapped(_ sender: UIButton) {
+        if inputedNumber != 0 {
+            return
+        }
+        if sender.currentTitle! == "start" {
+            isMovingTimer = true
+            start(seconds: timerStartSeconds)
+            sender.setTitle("stop", for: .normal)
+        } else {
+            isMovingTimer = false
+            sender.setTitle("start", for: .normal)
+            timerStartSeconds = currentSeconds
+        }
+        printLabel()
+    }
+    func start(seconds: Int) {
+        if(seconds>0){
+            currentSeconds =  seconds
+        } else{
+            currentSeconds = 1
+        }
         timer = Timer.scheduledTimer(
             withTimeInterval: 1.0,
             repeats: true,
@@ -44,24 +100,37 @@ class ViewController: UIViewController {
         printLabel()
         if (currentSeconds == 0) {
             timer.invalidate()
+//            AudioServicesPlayAlertSound(soundId)
+            repertTimerSounds()
+        }
+    }
+    
+    func repertTimerSounds() {
+        if isMovingTimer {
             let soundId : SystemSoundID = 1005
-            AudioServicesPlayAlertSound(soundId)
+            AudioServicesPlayAlertSoundWithCompletion(soundId) {
+                self.repertTimerSounds()
+            }
         }
     }
     
     func printLabel() {
-        var seconds: Int = currentSeconds
-        var secondsString: String = "残り"
-        if(seconds > 3600) {
-            secondsString += "\(seconds/3600)時間"
-            seconds %= 3600
+        print("printLabel()")
+        if isMovingTimer {
+            let hour = currentSeconds / 3600
+            let min = (currentSeconds % 3600) / 60
+            let sec = currentSeconds % 60
+            label.text = "残り\(hour)時間\(min)分\(sec)秒"
+        } else {
+            if (inputedNumber == 0) {
+                let hour = timerStartSeconds / 3600
+                let min = (timerStartSeconds % 3600) / 60
+                let sec = timerStartSeconds % 60
+                label.text = "\(hour)時間\(min)分\(sec)秒"
+            } else {
+                label.text = "\(inputedNumber)"
+            }
         }
-        if(seconds > 60) {
-            secondsString += "\(seconds/60)分"
-            seconds %= 60
-        }
-        secondsString += "\(seconds)秒"
-        label.text = secondsString
     }
 }
 
